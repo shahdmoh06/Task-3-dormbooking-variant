@@ -18,11 +18,23 @@ export default function BookingForm() {
   useEffect(() => {
     if (!id) return
     // TODO
+      api.get(`/bookings/${id}`)
+    .then(res => {
+      const b = res.data
+      setForm({
+        roomNumber: b.roomNumber,
+        startDate: b.startDate.slice(0, 10),
+        endDate: b.endDate.slice(0, 10),
+        purpose: b.purpose || '',
+      })
+    })
+    .catch(err => setError(err.response?.data?.message || 'Could not load booking'))
   }, [id])
 
   // TODO: update `form` when an input changes.
   function onChange(e) {
     // TODO
+    setForm(f => ({ ...f, [e.target.name]: e.target.value }))
   }
 
   // TODO: POST a new booking, or PATCH the existing one when editing,
@@ -31,6 +43,15 @@ export default function BookingForm() {
     e.preventDefault()
     setError('')
     // TODO
+      const { roomNumber, startDate, endDate, purpose } = form
+  const payload = { roomNumber, startDate, endDate, purpose }
+  try {
+    if (id) await api.patch(`/bookings/${id}`, payload)
+    else await api.post('/bookings', payload)
+    nav('/bookings')
+  } catch (err) {
+    setError(err.response?.data?.message || 'Something went wrong')
+  }
   }
 
   return (
@@ -38,6 +59,37 @@ export default function BookingForm() {
       <h1 className="text-xl font-semibold mb-4">{id ? 'Edit' : 'New'} Booking</h1>
       <form onSubmit={onSubmit} className="space-y-3">
         {/* TODO: room number input, start/end date inputs and purpose textarea */}
+          <input
+    className="w-full border rounded p-2"
+    name="roomNumber"
+    placeholder="e.g. B2-104"
+    value={form.roomNumber}
+    onChange={onChange}
+    required
+  />
+  <input
+    className="w-full border rounded p-2"
+    type="date"
+    name="startDate"
+    value={form.startDate}
+    onChange={onChange}
+    required
+  />
+  <input
+    className="w-full border rounded p-2"
+    type="date"
+    name="endDate"
+    value={form.endDate}
+    onChange={onChange}
+    required
+  />
+  <textarea
+    className="w-full border rounded p-2"
+    name="purpose"
+    placeholder="Purpose (optional)"
+    value={form.purpose}
+    onChange={onChange}
+  />
         {error && <div className="text-red-600 text-sm">{error}</div>}
         <button className="btn" type="submit">Save</button>
       </form>
